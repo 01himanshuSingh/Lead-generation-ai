@@ -1,0 +1,1 @@
+"""Basic data extraction fallbacks."""
