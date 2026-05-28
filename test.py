@@ -73,7 +73,7 @@ async def main():
         # -----------------------------------
 
         await browser.open(
-            "https://browserleaks.com/javascript"
+            "https://api.ipify.org?format=json"
         )
 
         logger.info(
