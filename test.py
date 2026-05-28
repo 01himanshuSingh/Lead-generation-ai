@@ -1,28 +1,110 @@
+# import asyncio
+
+# from browser.proxy import ProxyManager
+# from browser.driver import BrowserDriver
+
+
+# async def main():
+
+#     proxy_manager = ProxyManager()
+
+#     await proxy_manager.initialize()
+
+#     proxy = proxy_manager.get_random_proxy()
+
+#     browser = BrowserDriver(proxy=proxy)
+
+#     await browser.start()
+
+#     await browser.open(
+#         "https://api.ipify.org?format=json"
+#     )
+
+#     input("Press Enter to close browser...")
+
+#     await browser.close()
+
+
+# asyncio.run(main())
+
 import asyncio
 
 from browser.proxy import ProxyManager
 from browser.driver import BrowserDriver
 
+from utils.logger import logger
+
 
 async def main():
 
-    proxy_manager = ProxyManager()
+    browser = None
 
-    await proxy_manager.initialize()
+    try:
 
-    proxy = proxy_manager.get_random_proxy()
+        # -----------------------------------
+        # Initialize Proxy Layer
+        # -----------------------------------
 
-    browser = BrowserDriver(proxy=proxy)
+        proxy_manager = ProxyManager()
 
-    await browser.start()
+        await proxy_manager.initialize()
 
-    await browser.open(
-        "https://api.ipify.org?format=json"
-    )
+        proxy = (
+            proxy_manager
+            .get_random_proxy()
+        )
 
-    input("Press Enter to close browser...")
+        logger.info(
+            f"Selected proxy -> {proxy}"
+        )
 
-    await browser.close()
+        # -----------------------------------
+        # Initialize Browser Layer
+        # -----------------------------------
+
+        browser = BrowserDriver(
+            proxy=proxy
+        )
+
+        await browser.start()
+
+        # -----------------------------------
+        # Open Target
+        # -----------------------------------
+
+        await browser.open(
+            "https://browserleaks.com/javascript"
+        )
+
+        logger.info(
+            "Scraping workflow started"
+        )
+
+        input(
+            "Press Enter to close..."
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Application failed -> {e}"
+        )
+
+    finally:
+
+        # -----------------------------------
+        # Cleanup Resources
+        # -----------------------------------
+
+        if browser:
+
+            await browser.close()
+
+        logger.info(
+            "Application shutdown complete"
+        )
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+
+    asyncio.run(main())

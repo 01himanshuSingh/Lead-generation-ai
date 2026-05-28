@@ -1,209 +1,416 @@
-# """Browser automation driver initialization."""
-# from playwright.async_api import async_playwright, Browser, BrowserContext, Page
-# from config import settings
-# from utils.logger import logger, log_json
 
-# from typing import Optional
+"""
+Enterprise-grade Browser Driver.
 
+Purpose:
+- Centralized browser orchestration
+- Proxy integration
+- Header orchestration
+- User-Agent orchestration
+- Stealth integration
+- Async browser automation
 
-# class BrowserDriver:
-#     """
-#     Scalable Playwright browser manager.
-#     Handles:
-#     - Chromium launch
-#     - headless mode
-#     - proxy injection
-#     - browser context creation
-#     """
+Architecture:
+Proxy
+↓
+Browser Launch
+↓
+User-Agent Generation
+↓
+Header Injection
+↓
+Stealth Protection
+↓
+Browser Page
+↓
+Scraping
 
-#     def __init__(self):
+Design Goals:
+- Scalable
+- Modular
+- Async-first
+- Production-ready
+"""
 
-#         self.playwright = None
-#         self.browser: Optional[Browser] = None
-#         self.context: Optional[BrowserContext] = None
-#         self.page: Optional[Page] = None
+from __future__ import annotations
 
-#     async def start(self):
+from typing import Optional
 
-#         logger.info("Starting Playwright browser")
+from playwright.async_api import (
+    async_playwright,
+    Browser,
+    BrowserContext,
+    Page,
+)
 
-#         log_json(
-#             level="INFO",
-#             message="Launching browser",
-#         )
+from browser.headers import HeaderManager
+from browser.stealth import StealthManager
 
-#         self.playwright = await async_playwright().start()
-
-#         self.browser = await self.playwright.chromium.launch(
-#             headless=settings.HEADLESS,
-
-#             proxy={
-#                 "server": f"http://{settings.PROXY_HOST}:{settings.PROXY_PORT}",
-#                 "username": settings.PROXY_USER,
-#                 "password": settings.PROXY_PASS,
-#             },
-
-#             args=[
-#                 "--disable-blink-features=AutomationControlled",
-#                 "--disable-web-security",
-#                 "--disable-features=IsolateOrigins,site-per-process",
-#                 "--disable-dev-shm-usage",
-#                 "--no-sandbox",
-#             ],
-#         )
-
-#         self.context = await self.browser.new_context(
-#             ignore_https_errors=True,
-
-#             viewport={
-#                 "width": 1280,
-#                 "height": 720,
-#             },
-
-#             user_agent=(
-#                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-#                 "AppleWebKit/537.36 (KHTML, like Gecko) "
-#                 "Chrome/124.0.0.0 Safari/537.36"
-#             ),
-
-#             java_script_enabled=True,
-#         )
-
-#         self.page = await self.context.new_page()
-
-#         logger.info("Browser started successfully")
-
-#         log_json(
-#             level="INFO",
-#             message="Browser launched successfully",
-#         )
-
-#         return self.page
-
-#     async def open(self, url: str):
-
-#         if not self.page:
-#             raise ValueError("Browser page not initialized")
-
-#         logger.info(f"Opening URL: {url}")
-
-#         await self.page.goto(
-#             url,
-#             wait_until="networkidle",
-#             timeout=60000,
-#         )
-
-#         log_json(
-#             level="INFO",
-#             message="URL opened successfully",
-#             extra={"url": url},
-#         )
-
-#         return self.page
-
-#     async def get_html(self):
-
-#         if not self.page:
-#             raise ValueError("Page not initialized")
-
-#         return await self.page.content()
-
-#     async def screenshot(self, path: str = "data/screenshot.png"):
-
-#         if self.page:
-#             await self.page.screenshot(path=path)
-
-#     async def close(self):
-
-#         logger.info("Closing browser")
-
-#         if self.context:
-#             await self.context.close()
-
-#         if self.browser:
-#             await self.browser.close()
-
-#         if self.playwright:
-#             await self.playwright.stop()
-
-#         log_json(
-#             level="INFO",
-#             message="Browser closed successfully",
-#         )
+from utils.logger import (
+    logger,
+    log_json,
+)
 
 
-from playwright.async_api import async_playwright
-
+# =========================================================
+# Browser Driver
+# =========================================================
 
 class BrowserDriver:
+    """
+    Enterprise browser orchestration layer.
+    """
 
-    def __init__(self, proxy=None):
+    # =====================================================
+    # Initialization
+    # =====================================================
+
+    def __init__(
+        self,
+        proxy: Optional[str] = None,
+    ):
 
         self.proxy = proxy
 
         self.playwright = None
-        self.browser = None
-        self.page = None
 
-    async def start(self):
+        self.browser: Optional[
+            Browser
+        ] = None
 
-        self.playwright = await async_playwright().start()
+        self.context: Optional[
+            BrowserContext
+        ] = None
 
-        launch_args = {
-            "headless": False,
-        }
+        self.page: Optional[
+            Page
+        ] = None
 
-        # Proxy support
-        if self.proxy:
+        # ---------------------------------------------
+        # Managers
+        # ---------------------------------------------
 
-            print(f"Using proxy: {self.proxy}")
-
-            proxy_parts = self.proxy.replace(
-                "http://",
-                ""
-            )
-
-            creds, host = proxy_parts.split("@")
-
-            username, password = creds.split(":")
-
-            launch_args["proxy"] = {
-                "server": f"http://{host}",
-                "username": username,
-                "password": password,
-            }
-
-        self.browser = await self.playwright.chromium.launch(
-            executable_path=r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-            **launch_args
+        self.header_manager = (
+            HeaderManager()
         )
 
-        self.page = await self.browser.new_page()
+        self.stealth_manager = (
+            StealthManager()
+        )
 
-        print("Browser started")
+        logger.info(
+            "BrowserDriver initialized"
+        )
 
-        return self.page
+    # =====================================================
+    # Start Browser
+    # =====================================================
 
-    async def open(self, url):
+    async def start(self) -> Page:
+        """
+        Start browser system.
 
-        print(f"Opening: {url}")
+        Workflow:
+        Proxy
+        ↓
+        Launch Browser
+        ↓
+        Generate Headers
+        ↓
+        Create Context
+        ↓
+        Create Page
+        ↓
+        Apply Stealth
+        """
 
-        await self.page.goto(url)
+        try:
 
-    async def get_html(self):
+            logger.info(
+                "Starting browser system"
+            )
+
+            # -----------------------------------------
+            # Playwright Engine
+            # -----------------------------------------
+
+            self.playwright = (
+                await async_playwright()
+                .start()
+            )
+
+            # -----------------------------------------
+            # Browser Launch Config
+            # -----------------------------------------
+
+            launch_args = {
+                "headless": False,
+            }
+
+            # -----------------------------------------
+            # Proxy Support
+            # -----------------------------------------
+
+            if self.proxy:
+
+                logger.info(
+                    f"Using proxy -> "
+                    f"{self.proxy}"
+                )
+
+                proxy_parts = (
+                    self.proxy.replace(
+                        "http://",
+                        ""
+                    )
+                )
+
+                creds, host = (
+                    proxy_parts.split("@")
+                )
+
+                username, password = (
+                    creds.split(":")
+                )
+
+                launch_args["proxy"] = {
+
+                    "server":
+                        f"http://{host}",
+
+                    "username":
+                        username,
+
+                    "password":
+                        password,
+                }
+
+            # -----------------------------------------
+            # Launch Browser
+            # -----------------------------------------
+
+            self.browser = (
+                await self.playwright
+                .chromium
+                .launch(
+                    executable_path=(
+                        r"C:\Program Files"
+                        r"\Google\Chrome"
+                        r"\Application"
+                        r"\chrome.exe"
+                    ),
+                    **launch_args
+                )
+            )
+
+            logger.info(
+                "Browser launched"
+            )
+
+            # -----------------------------------------
+            # Generate Browser Headers
+            # -----------------------------------------
+
+            header_profile = (
+                self.header_manager
+                .generate()
+            )
+
+            logger.info(
+                "Generated browser headers"
+            )
+
+            log_json(
+                level="INFO",
+                message=(
+                    "Browser identity created"
+                ),
+                extra={
+                    "browser":
+                        header_profile
+                        .browser_profile
+                        .browser,
+
+                    "platform":
+                        header_profile
+                        .browser_profile
+                        .platform,
+                },
+            )
+
+            # -----------------------------------------
+            # Create Browser Context
+            # -----------------------------------------
+
+            self.context = (
+                await self.browser
+                .new_context(
+
+                    user_agent=(
+                        header_profile
+                        .browser_profile
+                        .user_agent
+                    ),
+
+                    extra_http_headers=(
+                        header_profile
+                        .headers
+                    ),
+                )
+            )
+
+            logger.info(
+                "Browser context created"
+            )
+
+            # -----------------------------------------
+            # Create Page
+            # -----------------------------------------
+
+            self.page = (
+                await self.context
+                .new_page()
+            )
+
+            logger.info(
+                "Browser page created"
+            )
+
+            # -----------------------------------------
+            # Apply Stealth
+            # -----------------------------------------
+
+            await self.stealth_manager.apply(
+                self.page
+            )
+
+            logger.info(
+                "Stealth protections applied"
+            )
+
+            logger.info(
+                "Browser system ready"
+            )
+
+            return self.page
+
+        except Exception as e:
+
+            logger.error(
+                f"Browser start failed -> {e}"
+            )
+
+            raise
+
+    # =====================================================
+    # Open URL
+    # =====================================================
+
+    async def open(
+        self,
+        url: str,
+    ) -> None:
+        """
+        Open target URL.
+        """
+
+        try:
+
+            logger.info(
+                f"Opening URL -> {url}"
+            )
+
+            await self.page.goto(
+                url,
+                wait_until="networkidle",
+            )
+
+            logger.info(
+                "Page loaded successfully"
+            )
+
+        except Exception as e:
+
+            logger.error(
+                f"Open URL failed -> {e}"
+            )
+
+            raise
+
+    # =====================================================
+    # Get HTML
+    # =====================================================
+
+    async def get_html(self) -> str:
+        """
+        Return page HTML.
+        """
 
         return await self.page.content()
 
-    async def screenshot(self, path="screenshot.png"):
+    # =====================================================
+    # Screenshot
+    # =====================================================
 
-        await self.page.screenshot(path=path)
+    async def screenshot(
+        self,
+        path: str = (
+            "data/screenshot.png"
+        ),
+    ) -> None:
+        """
+        Save browser screenshot.
+        """
 
-    async def close(self):
+        try:
 
-        if self.browser:
+            await self.page.screenshot(
+                path=path,
+                full_page=True,
+            )
 
-            await self.browser.close()
+            logger.info(
+                f"Screenshot saved -> "
+                f"{path}"
+            )
 
-        if self.playwright:
+        except Exception as e:
 
-            await self.playwright.stop()
+            logger.error(
+                f"Screenshot failed -> {e}"
+            )
+
+            raise
+
+    # =====================================================
+    # Close Browser
+    # =====================================================
+
+    async def close(self) -> None:
+        """
+        Shutdown browser system safely.
+        """
+
+        try:
+
+            logger.info(
+                "Closing browser system"
+            )
+
+            if self.browser:
+
+                await self.browser.close()
+
+            if self.playwright:
+
+                await self.playwright.stop()
+
+            logger.info(
+                "Browser system closed"
+            )
+
+        except Exception as e:
+
+            logger.error(
+                f"Browser close failed -> {e}"
+            )
