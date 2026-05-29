@@ -97,7 +97,7 @@ async def main():
     await browser.start()
 
     await browser.open(
-        r"C:\Users\a\Documents\himanshuProject\Lead_Scraper_ai\data\test_linkedin.html"
+        'https://www.lakshmimills.com/contact-us/'
     )
 
     html = await browser.get_html()

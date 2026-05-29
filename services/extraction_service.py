@@ -15,6 +15,23 @@ from typing import Dict, Any
 from utils.phone_normalizer import PhoneNormalizer
 from utils.email_normalizer import EmailNormalizer
 from utils.url_normalizer import URLNormalizer
+from models.lead_model import (
+    LeadModel
+)
+
+from models.contact_model import (
+    ContactModel
+)
+
+from models.company_model import (
+    CompanyModel
+)
+
+from models.address_model import (
+    AddressModel
+)
+
+
 
 from utils.linkedin_normalizer import (
     LinkedInNormalizer
@@ -178,4 +195,26 @@ class ExtractionService:
             "ExtractionService completed"
         )
 
-        return result
+        lead = LeadModel()
+
+        lead.contact = ContactModel(
+            emails=result.get("email", []),
+            phones=result.get("phone", []),
+            linkedin_urls=result.get("linkedin", []),
+            websites=result.get("website", []),
+        )
+
+        lead.company = CompanyModel(
+            name=result.get("company_name"),
+            website=(
+                result.get("website", [None])[0]
+                if result.get("website")
+                else None
+            ),
+        )
+
+        lead.address = AddressModel(
+            full_address=result.get("address")
+        )
+
+        return lead
