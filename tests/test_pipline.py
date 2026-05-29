@@ -27,6 +27,7 @@ from browser.proxy import ProxyManager
 from extractors.ScrappingPipline import ScrapingPipeline
 from utils.logger import logger
 
+
 async def main(url: str, fields: list[str]):
 
     # -----------------------------------

@@ -47,6 +47,9 @@ from utils.logger import (
     log_json,
 )
 
+from services.extraction_service import (
+    ExtractionService
+)
 
 # =========================================================
 # Extraction Orchestrator
@@ -84,7 +87,11 @@ class ExtractionOrchestrator:
         self.dom_parser = (
             DOMParser()
         )
-
+        
+        self.extraction_service = (
+            ExtractionService()
+        )
+        
         # -------------------------------------------------
         # Dynamic Extraction Routing
         # -------------------------------------------------
@@ -257,7 +264,15 @@ class ExtractionOrchestrator:
                 },
             )
 
-            return results
+            # return results
+            clean_results = (
+                self.extraction_service.process(
+                    results
+                )
+            )
+
+            return clean_results
+
 
         except Exception as e:
 

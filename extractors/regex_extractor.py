@@ -234,14 +234,88 @@ class RegexExtractor:
         text: str,
     ) -> List[str]:
 
-        matches = (
-            self.patterns["phone"]
-            .findall(text)
+        # ---------------------------------
+        # Debug Known Phone
+        # ---------------------------------
+
+        search_term = "25750034"
+
+        index = text.find(search_term)
+
+        if index != -1:
+
+            print("\n===== PHONE FOUND =====")
+
+            print(
+                text[
+                    max(0, index - 200):
+                    index + 200
+                ]
+            )
+
+            print("\n=======================\n")
+
+        else:
+
+            print(
+                "25750034 NOT FOUND IN PAGE"
+            )
+
+        # ---------------------------------
+        # Enterprise Phone Pattern
+        # ---------------------------------
+
+        phone_pattern = re.compile(
+            r"""
+            (?:
+                \+?\d{1,4}
+                [-\s]?
+            )?
+            (?:
+                \(?\d{2,5}\)?
+                [-\s]?
+            )?
+            \d{3,6}
+            (?:[-\s]?\d{2,6})+
+            """,
+            re.VERBOSE,
         )
 
-        return self._clean(matches)
+        matches = phone_pattern.findall(
+            text
+        )
 
-    # =====================================================
+        print("\nPHONE REGEX MATCHES:")
+        print(matches[:20])
+
+        cleaned = []
+
+        for phone in matches:
+
+            phone = phone.strip()
+
+            digits = re.sub(
+                r"\D",
+                "",
+                phone,
+            )
+
+            # Ignore garbage values
+            if len(digits) < 7:
+                continue
+
+            cleaned.append(phone)
+
+        # Remove duplicates
+        cleaned = list(
+            dict.fromkeys(cleaned)
+        )
+
+        print("\nPHONE CLEANED:")
+        print(cleaned)
+
+        return cleaned
+   # =====================================================
     # LinkedIn Extraction
     # =====================================================
 
@@ -255,8 +329,29 @@ class RegexExtractor:
             .findall(text)
         )
 
-        return self._clean(matches)
+        cleaned = []
 
+        for url in matches:
+
+            url = url.strip()
+
+            # Remove tracking params
+            url = url.split("?")[0]
+
+            # Remove fragments
+            url = url.split("#")[0]
+
+            # Remove trailing slash
+            url = url.rstrip("/")
+
+            cleaned.append(url)
+
+        # Deduplicate while preserving order
+        cleaned = list(
+            dict.fromkeys(cleaned)
+        )
+
+        return cleaned
     # =====================================================
     # Website Extraction
     # =====================================================

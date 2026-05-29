@@ -4,3 +4,5 @@ aiofiles
 playwright
 aiohttp
 beautifulsoup4
+phonenumbers
+tldextract
