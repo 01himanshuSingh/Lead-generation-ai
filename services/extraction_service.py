@@ -197,6 +197,11 @@ class ExtractionService:
 
         lead = LeadModel()
 
+        # Populate pass-through fields in lead.metadata so they are not discarded
+        for field in ["title", "meta", "schema", "open_graph", "visible_text"]:
+            if field in result:
+                lead.metadata[field] = result[field]
+
         lead.contact = ContactModel(
             emails=result.get("email", []),
             phones=result.get("phone", []),
@@ -205,7 +210,7 @@ class ExtractionService:
         )
 
         lead.company = CompanyModel(
-            name=result.get("company_name"),
+            name=extracted_data.get("title"),
             website=(
                 result.get("website", [None])[0]
                 if result.get("website")
@@ -214,7 +219,7 @@ class ExtractionService:
         )
 
         lead.address = AddressModel(
-            full_address=result.get("address")
+            full_address=extracted_data.get("address")
         )
 
         return lead

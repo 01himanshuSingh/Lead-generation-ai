@@ -75,13 +75,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--url",
         type=str,
-        default="https://iato.in/members",        # ← your default URL
+        default="https://www.lakshmimills.com/contact-us/",        # ← your default URL
     )
 
     parser.add_argument(
         "--fields",
         nargs="+",
-        default=["email", "phone", "title"],  # ← your default fields
+        default=["email", "phone", "title" , "linkedin"],  # ← your default fields
     )
 
     args = parser.parse_args()

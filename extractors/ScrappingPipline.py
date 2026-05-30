@@ -52,7 +52,8 @@ from typing import Any, Dict, List, Optional
 from browser.driver import BrowserDriver
 from extractors.orchestrator import ExtractionOrchestrator
 from utils.logger import logger, log_json
-
+from storage.excel_exporter import ExcelExporter
+from urllib.parse import urlparse
 
 # =========================================================
 # Result Contract
@@ -275,13 +276,43 @@ class ScrapingPipeline:
             )
 
             # ---------------------------------------------
-            # Step 4: Extract
-            # ---------------------------------------------
-
             extracted = self._orchestrator.extract(
                 html=html,
                 fields=fields,
             )
+
+            parsed = urlparse(url)
+
+            extracted.source_url = url
+
+            extracted.company.website = (
+                f"{parsed.scheme}://{parsed.netloc}"
+            )
+
+            extracted.contact.websites = [
+                f"{parsed.scheme}://{parsed.netloc}"
+            ]
+            extracted.log()
+
+            # Map LeadModel fields to a dictionary containing the requested fields
+            extracted_dict = {}
+            for field in fields:
+                if field == "email":
+                    extracted_dict["email"] = extracted.contact.emails
+                elif field == "phone":
+                    extracted_dict["phone"] = extracted.contact.phones
+                elif field == "linkedin":
+                    extracted_dict["linkedin"] = extracted.contact.linkedin_urls
+                elif field == "website":
+                    extracted_dict["website"] = extracted.contact.websites
+                elif field == "company_name":
+                    extracted_dict["company_name"] = extracted.company.name
+                elif field == "address":
+                    extracted_dict["address"] = extracted.address.full_address
+                elif field in ["title", "meta", "schema", "open_graph", "visible_text"]:
+                    extracted_dict[field] = extracted.metadata.get(field)
+                else:
+                    extracted_dict[field] = getattr(extracted, field, None)
 
             # ---------------------------------------------
             # Step 5: Build Result
@@ -290,16 +321,20 @@ class ScrapingPipeline:
             result = ScrapeResult(
                 url=url,
                 fields_requested=fields,
-                data=extracted,
+                data=extracted_dict,
                 success=True,
             )
+
+            ExcelExporter.export_lead(
+    extracted
+)
 
             log_json(
                 level="INFO",
                 message="Pipeline run success",
                 extra={
                     "url": url,
-                    "fields_found": list(extracted.keys()),
+                    "fields_found": list(extracted_dict.keys()),
                 },
             )
 

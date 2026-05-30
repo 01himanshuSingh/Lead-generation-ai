@@ -189,19 +189,27 @@ class BrowserDriver:
             # Launch Browser
             # -----------------------------------------
 
+            # self.browser = (
+            #     await self.playwright
+            #     .chromium
+            #     .launch(
+            #         executable_path=(
+            #             r"C:\Program Files"
+            #             r"\Google\Chrome"
+            #             r"\Application"
+            #             r"\chrome.exe"
+            #         ),
+            #         **launch_args
+            #     )
+            # )
+
             self.browser = (
-                await self.playwright
-                .chromium
-                .launch(
-                    executable_path=(
-                        r"C:\Program Files"
-                        r"\Google\Chrome"
-                        r"\Application"
-                        r"\chrome.exe"
-                    ),
-                    **launch_args
-                )
-            )
+    await self.playwright
+    .chromium
+    .launch(
+        **launch_args
+    )
+)
 
             logger.info(
                 "Browser launched"

@@ -136,33 +136,36 @@ class LeadModel(BaseModel):
 
         return {
 
-            "lead_id":
-                self.lead_id,
+        "lead_id":
+            self.lead_id,
 
-            "company_name":
-                self.company_name or "",
+        "company_name":
+            self.company.name or "",
 
-            "emails":
-                ", ".join(self.emails),
+        "emails":
+            ", ".join(
+                self.contact.emails
+            ),
 
-            "phones":
-                ", ".join(self.phones),
+        "phones":
+            ", ".join(
+                self.contact.phones
+            ),
 
-            "linkedin_urls":
-                ", ".join(
-                    self.linkedin_urls
-                ),
+        "linkedin_urls":
+            ", ".join(
+                self.contact.linkedin_urls
+            ),
 
-            "website":
-                self.website or "",
+        "website":
+            self.company.website or "",
 
-            "address":
-                self.address or "",
+        "address":
+            self.address.full_address or "",
 
-            "source_url":
-                self.source_url or "",
-        }
-
+        "source_url":
+            self.source_url or "",
+    }
     # ---------------------------------
     # Business Helpers
     # ---------------------------------
@@ -174,9 +177,9 @@ class LeadModel(BaseModel):
 
         return bool(
 
-            self.emails
-            or self.phones
-            or self.linkedin_urls
+            self.contact.emails
+            or self.contact.phones
+            or self.contact.linkedin_urls
 
         )
 
@@ -187,19 +190,55 @@ class LeadModel(BaseModel):
 
         score = 0
 
-        if self.emails:
+        if self.contact.emails:
             score += 30
 
-        if self.phones:
+        if self.contact.phones:
             score += 30
 
-        if self.linkedin_urls:
+        if self.contact.linkedin_urls:
             score += 20
 
-        if self.website:
+        if self.company.website:
             score += 10
 
-        if self.address:
+        if self.address.full_address:
             score += 10
 
         return score
+
+    def log(self):
+    
+        print("\n========== LEAD ==========")
+    
+        print(f"Lead ID      : {self.lead_id}")
+        print(f"Source URL   : {self.source_url}")
+    
+        print("\n--- Contact ---")
+    
+        print(f"Emails       : {self.contact.emails}")
+        print(f"Phones       : {self.contact.phones}")
+        print(f"LinkedIn     : {self.contact.linkedin_urls}")
+        print(f"Websites     : {self.contact.websites}")
+    
+        print("\n--- Company ---")
+    
+        print(f"Name         : {self.company.name}")
+        print(f"Website      : {self.company.website}")
+        print(f"Industry     : {self.company.industry}")
+        print(f"Description  : {self.company.description}")
+    
+        print("\n--- Address ---")
+    
+        print(f"Address      : {self.address.full_address}")
+        print(f"City         : {self.address.city}")
+        print(f"State        : {self.address.state}")
+        print(f"Country      : {self.address.country}")
+    
+        print("\n--- Metadata ---")
+    
+        for k, v in self.metadata.items():
+    
+            print(f"{k:12}: {v}")
+    
+        print("\n==========================\n")
