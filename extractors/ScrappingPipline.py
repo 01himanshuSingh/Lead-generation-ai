@@ -276,10 +276,13 @@ class ScrapingPipeline:
             )
 
             # ---------------------------------------------
-            extracted = self._orchestrator.extract(
-                html=html,
-                fields=fields,
-            )
+            extracted = await (
+    self._orchestrator.extract(
+        url=url,
+        html=html,
+        fields=fields,
+    )
+)
 
             parsed = urlparse(url)
 

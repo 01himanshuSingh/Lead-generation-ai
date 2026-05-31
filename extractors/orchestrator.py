@@ -51,6 +51,10 @@ from services.extraction_service import (
     ExtractionService
 )
 
+from extractors.ai_extractor import (
+    AIExtractor
+)
+
 # =========================================================
 # Extraction Orchestrator
 # =========================================================
@@ -91,7 +95,9 @@ class ExtractionOrchestrator:
         self.extraction_service = (
             ExtractionService()
         )
-        
+        self.ai_extractor = (
+    AIExtractor()
+)
         # -------------------------------------------------
         # Dynamic Extraction Routing
         # -------------------------------------------------
@@ -113,7 +119,20 @@ class ExtractionOrchestrator:
             "schema",
             "visible_text",
         }
+        self.ai_supported = {
 
+    "company_name",
+
+    "industry",
+
+    "description",
+
+    "ceo_name",
+
+    "founder_name",
+
+    "address",
+}
         logger.info(
             "ExtractionOrchestrator ready"
         )
@@ -122,8 +141,9 @@ class ExtractionOrchestrator:
     # Main Extraction Pipeline
     # =====================================================
 
-    def extract(
+    async def extract(
         self,
+        url: str,
         html: str,
         fields: List[str],
     ) -> Dict[str, Any]:
@@ -244,7 +264,67 @@ class ExtractionOrchestrator:
                     results["visible_text"] = (
                         dom_result.visible_text
                     )
+            # =================================================
+            # AI EXTRACTION
+            # =================================================
 
+            ai_fields = [
+
+                field
+
+                for field in fields
+
+                if field in self.ai_supported
+            ]
+
+            if ai_fields:
+
+                logger.info(
+                    f"Running AI extraction "
+                    f"-> {ai_fields}"
+                )
+
+                ai_result = await (
+                    self.ai_extractor.extract(
+
+                        url=url,
+
+                        dom_data={
+
+                            "title":
+                                results.get(
+                                    "title"
+                                ),
+
+                            "meta":
+                                results.get(
+                                    "meta"
+                                ),
+
+                            "schema":
+                                results.get(
+                                    "schema"
+                                ),
+
+                            "open_graph":
+                                results.get(
+                                    "open_graph"
+                                ),
+
+                            "visible_text":
+                                results.get(
+                                    "visible_text"
+                                ),
+                        },
+
+                        requested_fields=
+                            ai_fields,
+                    )
+                )
+
+                results.update(
+                    ai_result.to_dict()
+                )
             # =================================================
             # FINAL PIPELINE COMPLETE
             # =================================================

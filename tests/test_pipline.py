@@ -55,34 +55,60 @@ async def main(url: str, fields: list[str]):
     # -----------------------------------
     # Output
     # -----------------------------------
+    print("\n========== LEAD ==========")
+    data = result.data
 
-    print("\n--- Result ---")
-    print(f"URL     : {result.url}")
-    print(f"Proxy   : {proxy}")
-    print(f"Success : {result.success}")
+    print(f"URL          : {result.url}")
+    print(f"Success      : {result.success}")
 
-    for field, value in result.data.items():
-        print(f"{field:15} : {value}")
+    print("\n--- Contact ---")
+    print(f"Emails       : {data.get('email', [])}")
+    print(f"Phones       : {data.get('phone', [])}")
+    print(f"LinkedIn     : {data.get('linkedin', [])}")
+    print(f"Websites     : {data.get('website', [])}")
 
-    if result.error:
-        print(f"Error   : {result.error}")
+    print("\n--- Company ---")
+    print(f"Name         : {data.get('company_name', '')}")
+    print(f"Industry     : {data.get('industry', '')}")
+    print(f"CEO          : {data.get('ceo_name', '')}")
+    print(f"Founder      : {data.get('founder_name', '')}")
+    print(f"Description  : {data.get('description', '')}")
+
+    print("\n--- Address ---")
+    print(f"Address      : {data.get('address', '')}")
+
+    print("\n==========================")
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-
     parser.add_argument(
         "--url",
         type=str,
-        default="https://www.lakshmimills.com/contact-us/",        # ← your default URL
+        default="https://ascentialabs.com/about-us",        # ← your default URL
     )
-
     parser.add_argument(
-        "--fields",
-        nargs="+",
-        default=["email", "phone", "title" , "linkedin"],  # ← your default fields
-    )
+    "--fields",
+    nargs="+",
+    default=[
+        "email",
+        "phone",
+        "linkedin",
+        "website",
+
+        # DOM Fields
+        "title",
+
+        # AI Fields
+        "company_name",
+        "industry",
+        "description",
+        "address",
+        "ceo_name",
+        "founder_name",
+    ],
+)
 
     args = parser.parse_args()
 

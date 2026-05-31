@@ -10,7 +10,11 @@ class Settings:
 
     # API Keys
     ANTHROPIC_API_KEY: str
+# AI Provider Settings
 
+    AI_PROVIDER: str
+    GEMINI_API_KEY: str
+    OPENAI_API_KEY: str
     # Proxy Settings
     PROXY_HOST: str
     PROXY_PORT: int
@@ -35,6 +39,19 @@ class Settings:
             return str(os.getenv(val, default)).lower() in ("1", "true", "yes", "y", "t")
 
         return cls(
+             AI_PROVIDER=os.getenv(
+        "AI_PROVIDER",
+        "gemini",
+    ),
+
+    GEMINI_API_KEY=os.getenv(
+        "GEMINI_API_KEY",
+        "",
+    ),
+  OPENAI_API_KEY=os.getenv(
+        "OPENAI_API_KEY",
+        "",
+    ),
             ANTHROPIC_API_KEY=os.getenv("ANTHROPIC_API_KEY", "dummy_anthropic_key"),
             PROXY_HOST=os.getenv("PROXY_HOST", "p.webshare.io"),
             PROXY_PORT=int(os.getenv("PROXY_PORT", "80")),
